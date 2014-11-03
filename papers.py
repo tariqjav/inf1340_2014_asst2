@@ -13,8 +13,9 @@ __status__ = "Prototype"
 # imports one per line
 import re
 import datetime
-import json
+import jso#
 
+#INITIAL TEST TO SEE IF VCS IS WORKING! 
 
 def decide(input_file, watchlist_file, countries_file):
     """
