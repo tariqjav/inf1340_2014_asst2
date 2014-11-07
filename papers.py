@@ -20,7 +20,7 @@ first_name = input("First Name:")
 
 last_name = input("Last Name:")
 
-birth_date = input("Date in YYYY-MM-DD:")
+birth_date = input("Date in YYYY-mm-dd:")
 
 passport_number = input("Passport Number:")
 
@@ -34,19 +34,20 @@ from_location_country = input("From Country Code:")
 
 reason_for_entry = input("Returning, Transit or Visa?:")
 
+# If the individual is in Transit, then the officer must input further information:
+
 if reason_for_entry == "Transit":
     via_location_city = input("Via City:")
     via_location_region = input("Via Region:")
     via_location_country = input("Via Country Code:")
-    visa_date = input("Date in YYYY-MM-DD:")
-    visa_code = input("Visa Code")
+    visa_date = input("Visa Date in YYYY-mm-dd:")
+    visa_code = input("Visa Code:")
+
+# Otherwise, if the individual holds a Visa, then the Visa information is required:
 
 elif reason_for_entry == "Visa":
-    visa_date = input("Date in YYYY-MM-DD:")
-    visa_code = input("Visa Code")
-
-
-
+    visa_date = input("Date in YYYY-mm-dd:")
+    visa_code = input("Visa Code:")
 
 
 def decide(input_file, watchlist_file, countries_file):
