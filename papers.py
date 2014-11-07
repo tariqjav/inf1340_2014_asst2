@@ -11,14 +11,16 @@ __license__ = "MIT License"
 __status__ = "Prototype"
 
 # imports one per line
+import datetime
 
 
+# All the information that an Immigration Officer will input to inspect entry for an individual:
 
 first_name = input("First Name:")
 
 last_name = input("Last Name:")
 
-birth_date = input("Birth Date:")
+birth_date = input("Date in YYYY-MM-DD:")
 
 passport_number = input("Passport Number:")
 
@@ -31,6 +33,19 @@ from_location_region = input("From Region:")
 from_location_country = input("From Country Code:")
 
 reason_for_entry = input("Returning, Transit or Visa?:")
+
+if reason_for_entry == "Transit":
+    via_location_city = input("Via City:")
+    via_location_region = input("Via Region:")
+    via_location_country = input("Via Country Code:")
+    visa_date = input("Date in YYYY-MM-DD:")
+    visa_code = input("Visa Code")
+
+elif reason_for_entry == "Visa":
+    visa_date = input("Date in YYYY-MM-DD:")
+    visa_code = input("Visa Code")
+
+
 
 
 
