@@ -11,11 +11,28 @@ __license__ = "MIT License"
 __status__ = "Prototype"
 
 # imports one per line
-import re
-import datetime
-import jso#
 
-#INITIAL TEST TO SEE IF VCS IS WORKING! 
+
+
+first_name = input("First Name:")
+
+last_name = input("Last Name:")
+
+birth_date = input("Birth Date:")
+
+passport_number = input("Passport Number:")
+
+home_location_city = input("Home City:")
+home_location_region = input("Home Region:")
+home_location_country = input("Home Country Code:")
+
+from_location_city = input("From City:")
+from_location_region = input("From Region:")
+from_location_country = input("From Country Code:")
+
+reason_for_entry = input("Returning, Transit or Visa?:")
+
+
 
 def decide(input_file, watchlist_file, countries_file):
     """
@@ -32,7 +49,7 @@ def decide(input_file, watchlist_file, countries_file):
 
 def valid_passport_format(passport_number):
     """
-    Checks whether a pasport number is five sets of five alpha-number characters separated by dashes
+    Checks whether a passport number is five sets of five alpha-number characters separated by dashes
     :param passport_number: alpha-numeric string
     :return: Boolean; True if the format is valid, False otherwise
     """
@@ -55,3 +72,6 @@ def valid_date_format(date_string):
         return True
     except ValueError:
         return False
+
+
+
