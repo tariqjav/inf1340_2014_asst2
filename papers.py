@@ -28,12 +28,11 @@ def decide(input_file, watchlist_file, countries_file):
     mandatory_fields = ['first_name', 'last_name', 'home', 'birth_date', 'passport', 'from', 'entry_reason']
     loc = ['home', 'from', 'via']
     loc_fl = ['city', 'country', 'region']
-    dec_list = ''
+    dec_list = []
 
     # Reading Watchlist Data
     json_data=open(watchlist_file)
     w_data = json.load(json_data)
-    pprint(w_data)
     json_data.close()
 
     # Reading Country Data
@@ -68,7 +67,7 @@ def decide(input_file, watchlist_file, countries_file):
 
     for i in range(len(data)):
         # Check Incomplete INFO
-        decision = ''
+        decision = 0
         for fl in mandatory_fields:
             if fl not in data[i]:
                 decision = 'Reject'
@@ -76,7 +75,7 @@ def decide(input_file, watchlist_file, countries_file):
             if lc in data[i]:
                 for lc_man_fl in loc_fl:
                     if lc_man_fl not in data[i][lc]:
-                        decision = 'Reject'
+                        decision |= 4
 
         # Quarantine check - highest priority, we can exit as soon as this condition is met - break
         country_fr = data[i]['from']['country']
@@ -85,36 +84,65 @@ def decide(input_file, watchlist_file, countries_file):
             country_via = data[i]['via']['country']
 
         if country_fr in med_adv_req or country_via in med_adv_req:
-            decision = 'Quarantine'
-            print('Quarantine', i)
+            decision |= 8
 
         # Secondary
         if data[i]['passport'].lower() in sec_passport:
-            decision = 'Secondary'
-            print('Secondary on passport', i, data[i]['passport'])
+            decision |= 2
 
         if data[i]['first_name'].lower() in sec_name:
             if data[i]['last_name'].lower() in sec_name[data[i]['first_name'].lower()]:
-                decision = 'Secondary'
-                print('Secondary on Name', i, data[i]['first_name'].lower())
+                decision |= 2
 
         #  Accept
         if data[i]['entry_reason'] == "returning":
             if data[i]['home']['country'] == "KAN":
-                decision = 'Accept'
-                print('Accept', data[i]['entry_reason'], data[i]['home']['country'])
+                decision |= 1
 
 
-        if data[i]['entry_reason'].lower() == 'visit' and c_data[data[i]['from']['country']]['visitor_visa_required'] == "1":
-            if 'visa' in data[i]:
+        if data[i]['entry_reason'].lower() == 'visit' and c_data[data[i]['from']['country']]['visitor_visa_required'] == "1" :
+            if 'visa' in data[i] and valid_date_format(data[i]['visa']['date']):
                 now = datetime.datetime.now()
                 visa_time = data[i]['visa']['date']
-                #tdelta = now - visa_time
-                print(now ,visa_time )
-                decision = 'Accept'
+                match = re.search(r'([0-9]*)\-', visa_time)
+                year = 0
+                if match:
+                    year = int(match.group(1))
 
+                if now.year - year < 2:
+                    decision |= 1
+                else:
+                    decision |= 4
 
-    return ["Reject"]
+        if data[i]['entry_reason'].lower() == 'transit' and c_data[data[i]['from']['country']]['transit_visa_required'] == "1" :
+            if 'visa' in data[i] and valid_date_format(data[i]['visa']['date']):
+                now = datetime.datetime.now()
+                visa_time = data[i]['visa']['date']
+                match = re.search(r'([0-9]*)\-', visa_time)
+                year = 0
+                if match:
+                    year = int(match.group(1))
+
+                if now.year - year < 2:
+                    decision |= 1
+                else:
+                    decision |= 4
+
+        if decision & 8 == 8:
+            dec_list.append('Quarantine')
+        else:
+            if decision & 4 == 4:
+                dec_list.append('Reject')
+            else:
+                if decision & 2 == 2:
+                    dec_list.append('Secondary')
+                else:
+                    if decision & 1 == 1:
+                        dec_list.append('Accept')
+                    else:
+                        dec_list.append('No decision')
+
+    return dec_list
 
 
 def valid_passport_format(passport_number):
