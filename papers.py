@@ -1,53 +1,12 @@
 #!/usr/bin/env python3
 
 """ Computer-based immigration office for Kanadia """
-
-__author__ = 'Susan Sim'
-__email__ = "ses@drsusansim.org"
-
-__copyright__ = "2014 Susan Sim"
-__license__ = "MIT License"
-
-__status__ = "Prototype"
+import re
 
 # imports one per line
 import datetime
-
-
-# All the information that an Immigration Officer will input to inspect entry for an individual:
-
-first_name = input("First Name:")
-
-last_name = input("Last Name:")
-
-birth_date = input("Date in YYYY-mm-dd:")
-
-passport_number = input("Passport Number:")
-
-home_location_city = input("Home City:")
-home_location_region = input("Home Region:")
-home_location_country = input("Home Country Code:")
-
-from_location_city = input("From City:")
-from_location_region = input("From Region:")
-from_location_country = input("From Country Code:")
-
-reason_for_entry = input("Returning, Transit or Visa?:")
-
-# If the individual is in Transit, then the officer must input further information:
-
-if reason_for_entry == "Transit":
-    via_location_city = input("Via City:")
-    via_location_region = input("Via Region:")
-    via_location_country = input("Via Country Code:")
-    visa_date = input("Visa Date in YYYY-mm-dd:")
-    visa_code = input("Visa Code:")
-
-# Otherwise, if the individual holds a Visa, then the Visa information is required:
-
-elif reason_for_entry == "Visa":
-    visa_date = input("Date in YYYY-mm-dd:")
-    visa_code = input("Visa Code:")
+import json
+from pprint import pprint
 
 
 def decide(input_file, watchlist_file, countries_file):
@@ -60,6 +19,101 @@ def decide(input_file, watchlist_file, countries_file):
         an entry or transit visa is required, and whether there is currently a medical advisory
     :return: List of strings. Possible values of strings are: "Accept", "Reject", "Secondary", and "Quarantine"
     """
+
+    # Reading entries
+    json_data=open(input_file)
+    data = json.load(json_data)
+    json_data.close()
+
+    mandatory_fields = ['first_name', 'last_name', 'home', 'birth_date', 'passport', 'from', 'entry_reason']
+    loc = ['home', 'from', 'via']
+    loc_fl = ['city', 'country', 'region']
+    dec_list = ''
+
+    # Reading Watchlist Data
+    json_data=open(watchlist_file)
+    w_data = json.load(json_data)
+    pprint(w_data)
+    json_data.close()
+
+    # Reading Country Data
+    json_data=open(countries_file)
+    c_data = json.load(json_data)
+    json_data.close()
+
+    # List of countries requiring medical advisory
+    med_adv_req = []
+    for code in c_data:
+        if c_data[code]['medical_advisory'] != '':
+            med_adv_req.append(code)
+
+
+    # List of passport numbers that are watch listed
+    sec_passport = []
+    for i in range(len(w_data)):
+        if w_data[i]['passport'] != '':
+            sec_passport.append(w_data[i]['passport'].lower())
+
+
+    # List of names that are watch listed
+    sec_name = {}
+    for i in range(len(w_data)):
+        if w_data[i]['first_name'] != '':
+            if w_data[i]['first_name'].lower() in sec_name:
+                if w_data[i]['last_name'].lower() not in sec_name[w_data[i]['first_name'].lower()]:
+                    sec_name[w_data[i]['first_name'].lower()].append(w_data[i]['last_name'].lower())
+            else:
+                sec_name[w_data[i]['first_name'].lower()] = [w_data[i]['last_name'].lower()]
+
+
+    for i in range(len(data)):
+        # Check Incomplete INFO
+        decision = ''
+        for fl in mandatory_fields:
+            if fl not in data[i]:
+                decision = 'Reject'
+        for lc in loc:
+            if lc in data[i]:
+                for lc_man_fl in loc_fl:
+                    if lc_man_fl not in data[i][lc]:
+                        decision = 'Reject'
+
+        # Quarantine check - highest priority, we can exit as soon as this condition is met - break
+        country_fr = data[i]['from']['country']
+        country_via = ''
+        if 'via' in data[i]:
+            country_via = data[i]['via']['country']
+
+        if country_fr in med_adv_req or country_via in med_adv_req:
+            decision = 'Quarantine'
+            print('Quarantine', i)
+
+        # Secondary
+        if data[i]['passport'].lower() in sec_passport:
+            decision = 'Secondary'
+            print('Secondary on passport', i, data[i]['passport'])
+
+        if data[i]['first_name'].lower() in sec_name:
+            if data[i]['last_name'].lower() in sec_name[data[i]['first_name'].lower()]:
+                decision = 'Secondary'
+                print('Secondary on Name', i, data[i]['first_name'].lower())
+
+        #  Accept
+        if data[i]['entry_reason'] == "returning":
+            if data[i]['home']['country'] == "KAN":
+                decision = 'Accept'
+                print('Accept', data[i]['entry_reason'], data[i]['home']['country'])
+
+
+        if data[i]['entry_reason'].lower() == 'visit' and c_data[data[i]['from']['country']]['visitor_visa_required'] == "1":
+            if 'visa' in data[i]:
+                now = datetime.datetime.now()
+                visa_time = data[i]['visa']['date']
+                #tdelta = now - visa_time
+                print(now ,visa_time )
+                decision = 'Accept'
+
+
     return ["Reject"]
 
 
@@ -91,3 +145,4 @@ def valid_date_format(date_string):
 
 
 
+decide('example_entries.json','watchlist.json', 'countries.json')
