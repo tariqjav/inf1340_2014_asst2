@@ -172,5 +172,3 @@ def valid_date_format(date_string):
         return False
 
 
-
-decide('example_entries.json','watchlist.json', 'countries.json')
