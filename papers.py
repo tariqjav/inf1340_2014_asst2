@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 """ Computer-based immigration office for Kanadia """
+
 import re
 
 # imports one per line
@@ -33,7 +34,7 @@ def decide(input_file, watchlist_file, countries_file):
     if input_file == "" or watchlist_file == "" or countries_file == "":
         raise IOError("IOError: No File name passed")
 
-    # Check for data files are of json types: TYPE ERROR if wrong values passed
+    # Check if data files are of json types: TYPE ERROR if wrong values passed
     match = re.search(r'([^.]*.json)', input_file)
     if not match:
         raise TypeError("Type Error: Pass in a json file name")
@@ -46,15 +47,13 @@ def decide(input_file, watchlist_file, countries_file):
     if not match:
         raise TypeError("Type Error: Pass in a json file name")
 
-
     # Python will raise IO ERROR if file not found --> Expected
-
-    # Reading entries
+    # This will read the input entries of an individual
     json_data=open(input_file)
     data = json.load(json_data)
     json_data.close()
 
-    # Check the data structure in the json for input_file -- Has to be list of dicts
+    # This will check the data structure in the json for input_file -- Has to be a list of dictionaries
     if type(data) is list:
         for i in range(len(data)):
             if not type(data[i]) is dict:
@@ -67,13 +66,12 @@ def decide(input_file, watchlist_file, countries_file):
     loc_fl = ['city', 'country', 'region']
     dec_list = []
 
-    # Reading Watchlist Data
+    # This will read the Watchlist Data
     json_data=open(watchlist_file)
     w_data = json.load(json_data)
     json_data.close()
 
-    # Check the data structure in the json for watchlist_file  -- Has to be list of dicts
-
+    # This will check the data structure in the json for watchlist_file  -- Has to be a list of dictionaries
     if type(w_data) is list:
         for i in range(len(w_data)):
             if not type(w_data[i]) is dict:
@@ -81,12 +79,12 @@ def decide(input_file, watchlist_file, countries_file):
     else:
         raise ValueError("Value Error: watchlist_file type is wrong")
 
-    # Reading Country Data
+    # This will read Country Data
     json_data=open(countries_file)
     c_data = json.load(json_data)
     json_data.close()
 
-    # Check the data structure in the json for countries_file  -- Has to be dict of dicts
+    # This will check the data structure in the json for countries_file  -- Has to be dictionary of dictionaries
     if type(c_data) is dict:
         for key in c_data:
             if not type(c_data[key]) is dict:
@@ -94,22 +92,19 @@ def decide(input_file, watchlist_file, countries_file):
     else:
         raise ValueError("Value Error: countries_file file type is wrong")
 
-
-    # List of countries requiring medical advisory
+    # This will create a List of countries requiring medical advisory
     med_adv_req = []
     for code in c_data:
         if c_data[code]['medical_advisory'] != '':
             med_adv_req.append(code)
 
-
-    # List of passport numbers that are watch listed
+    # This will create a list of passport numbers that are watch listed
     sec_passport = []
     for i in range(len(w_data)):
         if w_data[i]['passport'] != '':
             sec_passport.append(w_data[i]['passport'].lower())
 
-
-    # Dict of names that are watch listed
+    # This will create a dictionary of full names of individuals that are watch listed
     sec_name = {}
     for i in range(len(w_data)):
         if w_data[i]['first_name'] != '':
@@ -119,10 +114,9 @@ def decide(input_file, watchlist_file, countries_file):
             else:
                 sec_name[w_data[i]['first_name'].lower()] = [w_data[i]['last_name'].lower()]
 
-
     for i in range(len(data)):
 
-        # Check Incomplete INFO
+        # This will check incomplete information
         decision = 0
         for fl in mandatory_fields:
             if fl not in data[i]:
@@ -134,10 +128,10 @@ def decide(input_file, watchlist_file, countries_file):
                     if lc_man_fl not in data[i][lc]:
                         decision |= 4
 
-
         # To make sure explicitly calling mandatory fields only if they exist
         if decision & 4 != 4:
-            # Quarantine check - highest priority, we can exit as soon as this condition is met - break
+            # This will perform a check for individuals who should be in Quarantine- highest priority
+            # We can exit as soon as this condition is met - break
             country_fr = data[i]['from']['country']
             country_via = ''
             if 'via' in data[i]:
@@ -146,7 +140,7 @@ def decide(input_file, watchlist_file, countries_file):
             if country_fr in med_adv_req or country_via in med_adv_req:
                 decision |= 8
 
-            # Secondary
+            # This will perform a check to see who would be granted the Secondary decision
             if data[i]['passport'].lower() in sec_passport:
                 decision |= 2
 
@@ -158,11 +152,10 @@ def decide(input_file, watchlist_file, countries_file):
                 if data[i]['last_name'].lower() in sec_name[data[i]['first_name'].lower()]:
                     decision |= 2
 
-            #  Accept
+            #  This will perform a check to see who would be granted the Accept decision
             if data[i]['entry_reason'] == "returning":
                 if data[i]['home']['country'] == "KAN":
                     decision |= 1
-
 
             if data[i]['entry_reason'].lower() == 'visit' and c_data[data[i]['from']['country']]['visitor_visa_required'] == "1" :
                 if 'visa' in data[i] and valid_date_format(data[i]['visa']['date']):
