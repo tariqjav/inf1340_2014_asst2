@@ -8,6 +8,7 @@ import re
 import datetime
 import json
 from pprint import pprint
+#from twisted.protocols.ftp import FileNotFoundError
 from twisted.protocols.ftp import FileNotFoundError
 
 
@@ -62,6 +63,8 @@ def decide(input_file, watchlist_file, countries_file):
         json_data.close()
     except FileNotFoundError:
         raise FileNotFoundError
+    except IOError:
+        raise FileNotFoundError
 
     # This will check the data structure in the json for input_file
     #    ------     Has to be a list of dictionaries
@@ -90,6 +93,8 @@ def decide(input_file, watchlist_file, countries_file):
         json_data.close()
     except FileNotFoundError:
         raise FileNotFoundError
+    except IOError:
+        raise FileNotFoundError
 
     # This will check the data structure in the json for watchlist_file
     #    ------      Has to be a list of dictionaries
@@ -108,6 +113,10 @@ def decide(input_file, watchlist_file, countries_file):
         json_data.close()
     except FileNotFoundError:
         raise FileNotFoundError
+    except IOError:
+        raise FileNotFoundError
+
+
 
     # This will check the data structure in the json for countries_file
     #    ------      Has to be dictionary of dictionaries
@@ -166,14 +175,15 @@ def decide(input_file, watchlist_file, countries_file):
 
 
         # This will perform a check for individuals who should be in Quarantine- highest priority
-        # We can exit as soon as this condition is met - break
-        country_fr = data[i]['from']['country']
-        country_via = ''
-        if 'via' in data[i]:
-            country_via = data[i]['via']['country']
 
-        if country_fr in med_adv_req or country_via in med_adv_req:
-            decision |= 8
+        if 'from' in data[i]:
+            country_fr = data[i]['from']['country']
+            country_via = ''
+            if 'via' in data[i]:
+                country_via = data[i]['via']['country']
+
+            if country_fr in med_adv_req or country_via in med_adv_req:
+                decision |= 8
 
         # To make sure explicitly calling mandatory fields only if they exist
         if decision & 4 != 4:
@@ -194,6 +204,8 @@ def decide(input_file, watchlist_file, countries_file):
                 if data[i]['home']['country'] == "KAN":
                     decision |= 1
 
+
+            # This section is to handle the cases, when user is visiting from a country that visiting
             if data[i]['entry_reason'].lower() == 'visit' and c_data[data[i]['from']['country']]['visitor_visa_required'] == "1" :
                 if 'visa' in data[i] and valid_date_format(data[i]['visa']['date']):
                     now = datetime.datetime.now()
@@ -221,13 +233,18 @@ def decide(input_file, watchlist_file, countries_file):
                         year = int(match.group(1))
 
                     if now.year - year < 2:
+                        # Accept if visa is within yrs
                         decision |= 1
                     else:
+                        # Reject otherwise
                         decision |= 4
                 else:
-                    # if it is not a valid date or no visa
+                    # if it is not a valid date or no visa --> Not in handout
                     decision |= 4
 
+
+        # This will take into account the priorities, it will check quarantine first
+        # then, we will have reject and at the end, we have secondaries and accept.
         if decision & 8 == 8:
             dec_list.append('Quarantine')
         else:
