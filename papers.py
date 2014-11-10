@@ -8,6 +8,7 @@ import re
 import datetime
 import json
 from pprint import pprint
+from twisted.protocols.ftp import FileNotFoundError
 
 
 def decide(input_file, watchlist_file, countries_file):
@@ -32,7 +33,7 @@ def decide(input_file, watchlist_file, countries_file):
         raise TypeError("Type Error: Pass in file name")
 
     if input_file == "" or watchlist_file == "" or countries_file == "":
-        raise IOError("IOError: No File name passed")
+        raise FileNotFoundError("FileNotFoundError: No File name passed")
 
     # Check if data files are of json types: TYPE ERROR if wrong values passed
     match = re.search(r'([^.]*.json)', input_file)
@@ -47,13 +48,23 @@ def decide(input_file, watchlist_file, countries_file):
     if not match:
         raise TypeError("Type Error: Pass in a json file name")
 
-    # Python will raise IO ERROR if file not found --> Expected
-    # This will read the input entries of an individual
-    json_data=open(input_file)
-    data = json.load(json_data)
-    json_data.close()
 
-    # This will check the data structure in the json for input_file -- Has to be a list of dictionaries
+    ####################################################################
+    # Python will raise IO ERROR if file not found in json --> Expected
+    # To throw normal FileNotFoundError: I will read all the files first
+    ####################################################################
+
+    # This will read the input entries of an individual
+    try:
+        input_file_f = open(input_file, 'r')
+        json_data=open(input_file)
+        data = json.load(json_data)
+        json_data.close()
+    except FileNotFoundError:
+        raise FileNotFoundError
+
+    # This will check the data structure in the json for input_file
+    #    ------     Has to be a list of dictionaries
     if type(data) is list:
         for i in range(len(data)):
             if not type(data[i]) is dict:
@@ -61,17 +72,27 @@ def decide(input_file, watchlist_file, countries_file):
     else:
         raise ValueError("Value Error: input_file type is wrong")
 
+
+    # Mandatory fields, location fields {mandatory location fields}
     mandatory_fields = ['first_name', 'last_name', 'home', 'birth_date', 'passport', 'from', 'entry_reason']
     loc = ['home', 'from', 'via']
     loc_fl = ['city', 'country', 'region']
+
+    # List of string which holds the final decision for every single case.
     dec_list = []
 
-    # This will read the Watchlist Data
-    json_data=open(watchlist_file)
-    w_data = json.load(json_data)
-    json_data.close()
 
-    # This will check the data structure in the json for watchlist_file  -- Has to be a list of dictionaries
+    # This will read the Watchlist Data
+    try:
+        watchlist_file_f = open(watchlist_file, 'r')
+        json_data=open(watchlist_file)
+        w_data = json.load(json_data)
+        json_data.close()
+    except FileNotFoundError:
+        raise FileNotFoundError
+
+    # This will check the data structure in the json for watchlist_file
+    #    ------      Has to be a list of dictionaries
     if type(w_data) is list:
         for i in range(len(w_data)):
             if not type(w_data[i]) is dict:
@@ -80,17 +101,24 @@ def decide(input_file, watchlist_file, countries_file):
         raise ValueError("Value Error: watchlist_file type is wrong")
 
     # This will read Country Data
-    json_data=open(countries_file)
-    c_data = json.load(json_data)
-    json_data.close()
+    try:
+        countries_file_f = open(countries_file, 'r')
+        json_data=open(countries_file)
+        c_data = json.load(json_data)
+        json_data.close()
+    except FileNotFoundError:
+        raise FileNotFoundError
 
-    # This will check the data structure in the json for countries_file  -- Has to be dictionary of dictionaries
+    # This will check the data structure in the json for countries_file
+    #    ------      Has to be dictionary of dictionaries
     if type(c_data) is dict:
         for key in c_data:
             if not type(c_data[key]) is dict:
                 raise ValueError("Value Error: countries_file file type is wrong")
     else:
         raise ValueError("Value Error: countries_file file type is wrong")
+
+
 
     # This will create a List of countries requiring medical advisory
     med_adv_req = []

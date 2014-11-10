@@ -4,6 +4,7 @@
 
 # imports one per line
 import pytest
+from twisted.protocols.ftp import FileNotFoundError
 from papers import decide
 
 
@@ -13,23 +14,23 @@ def test_basic():
     assert decide("test_quarantine.json", "watchlist.json", "countries.json") == ["Quarantine"]
 
 def test_files():
-    with pytest.raises(IOError):
+    with pytest.raises(FileNotFoundError):
         decide("test_returning_citizen.json", "", "countries.json")
-    with pytest.raises(IOError):
+    with pytest.raises(FileNotFoundError):
         decide("", "watchlist.json", "countries.json")
-    with pytest.raises(IOError):
+    with pytest.raises(FileNotFoundError):
         decide("test_returning_citizen.json", "watchlist.json", "")
-    with pytest.raises(IOError):
+    with pytest.raises(FileNotFoundError):
         decide("test_watchlist", "watchlist.json", "")
-    with pytest.raises(IOError):
+    with pytest.raises(FileNotFoundError):
         decide("", "watchlist.json", "countries.json")
-    with pytest.raises(IOError):
+    with pytest.raises(FileNotFoundError):
         decide("test_watchlist.json", "", "countries.json")
-    with pytest.raises(IOError):
+    with pytest.raises(FileNotFoundError):
         decide("test_quarantine.json", "", "countries.json")
-    with pytest.raises(IOError):
+    with pytest.raises(FileNotFoundError):
         decide("test_quarantine", "watchlist.json", "")
-    with pytest.raises(IOError):
+    with pytest.raises(FileNotFoundError):
         decide("", "watchlist.json", "countries.json")
 
     # When file not passed are not string
@@ -39,7 +40,7 @@ def test_files():
     with pytest.raises(TypeError):
         decide("test_returning_citizen.json", 1, "countries.json")
 
-    # When file not passed are not json
+    # When file not passed are not of json type
     with pytest.raises(TypeError):
         decide("a", "watchlist.json", "countries.json")
 
