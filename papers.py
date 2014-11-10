@@ -8,8 +8,6 @@ import re
 import datetime
 import json
 from pprint import pprint
-from twisted.protocols.ftp import FileNotFoundError
-
 
 def decide(input_file, watchlist_file, countries_file):
     """
@@ -241,6 +239,8 @@ def decide(input_file, watchlist_file, countries_file):
                         dec_list.append('Accept')
                     else:
                         dec_list.append('Accept') # I think this should be accept?
+
+    print(dec_list)
 
     return dec_list
 

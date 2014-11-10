@@ -4,7 +4,6 @@
 
 # imports one per line
 import pytest
-from twisted.protocols.ftp import FileNotFoundError
 from papers import decide
 
 
@@ -12,6 +11,12 @@ def test_basic():
     assert decide("test_returning_citizen.json", "watchlist.json", "countries.json") == ["Accept", "Accept"]
     assert decide("test_watchlist.json", "watchlist.json", "countries.json") == ["Secondary"]
     assert decide("test_quarantine.json", "watchlist.json", "countries.json") == ["Quarantine"]
+    # Incomplete information
+    assert decide("test_1.json", "watchlist.json", "countries.json") == ["Reject"]
+    # Invalid passport number
+    assert decide("test_2.json", "watchlist.json", "countries.json") == ["Reject"]
+    # Needs medical advisory
+    assert decide("test_3.json", "watchlist.json", "countries.json") == ["Quarantine"]
 
 def test_files():
     with pytest.raises(FileNotFoundError):
