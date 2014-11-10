@@ -121,10 +121,13 @@ def decide(input_file, watchlist_file, countries_file):
 
 
     # This will create a List of countries requiring medical advisory
+    # It is more efficient to be outside loop
+
     med_adv_req = []
     for code in c_data:
         if c_data[code]['medical_advisory'] != '':
             med_adv_req.append(code)
+
 
     # This will create a list of passport numbers that are watch listed
     sec_passport = []
@@ -132,7 +135,9 @@ def decide(input_file, watchlist_file, countries_file):
         if w_data[i]['passport'] != '':
             sec_passport.append(w_data[i]['passport'].lower())
 
+
     # This will create a dictionary of full names of individuals that are watch listed
+    # --> it will be easier and faster to search later on in the main for loop that loops over entries
     sec_name = {}
     for i in range(len(w_data)):
         if w_data[i]['first_name'] != '':
@@ -142,6 +147,9 @@ def decide(input_file, watchlist_file, countries_file):
             else:
                 sec_name[w_data[i]['first_name'].lower()] = [w_data[i]['last_name'].lower()]
 
+
+
+    # Main for loop that loops over all entries on input file and makes decision
     for i in range(len(data)):
 
         # This will check incomplete information
@@ -156,18 +164,19 @@ def decide(input_file, watchlist_file, countries_file):
                     if lc_man_fl not in data[i][lc]:
                         decision |= 4
 
+
+        # This will perform a check for individuals who should be in Quarantine- highest priority
+        # We can exit as soon as this condition is met - break
+        country_fr = data[i]['from']['country']
+        country_via = ''
+        if 'via' in data[i]:
+            country_via = data[i]['via']['country']
+
+        if country_fr in med_adv_req or country_via in med_adv_req:
+            decision |= 8
+
         # To make sure explicitly calling mandatory fields only if they exist
         if decision & 4 != 4:
-            # This will perform a check for individuals who should be in Quarantine- highest priority
-            # We can exit as soon as this condition is met - break
-            country_fr = data[i]['from']['country']
-            country_via = ''
-            if 'via' in data[i]:
-                country_via = data[i]['via']['country']
-
-            if country_fr in med_adv_req or country_via in med_adv_req:
-                decision |= 8
-
             # This will perform a check to see who would be granted the Secondary decision
             if data[i]['passport'].lower() in sec_passport:
                 decision |= 2
