@@ -109,7 +109,7 @@ def decide(input_file, watchlist_file, countries_file):
             sec_passport.append(w_data[i]['passport'].lower())
 
 
-    # List of names that are watch listed
+    # Dict of names that are watch listed
     sec_name = {}
     for i in range(len(w_data)):
         if w_data[i]['first_name'] != '':
@@ -121,66 +121,81 @@ def decide(input_file, watchlist_file, countries_file):
 
 
     for i in range(len(data)):
+
         # Check Incomplete INFO
         decision = 0
         for fl in mandatory_fields:
             if fl not in data[i]:
-                decision = 'Reject'
+                decision |= 4
+
         for lc in loc:
             if lc in data[i]:
                 for lc_man_fl in loc_fl:
                     if lc_man_fl not in data[i][lc]:
                         decision |= 4
 
-        # Quarantine check - highest priority, we can exit as soon as this condition is met - break
-        country_fr = data[i]['from']['country']
-        country_via = ''
-        if 'via' in data[i]:
-            country_via = data[i]['via']['country']
 
-        if country_fr in med_adv_req or country_via in med_adv_req:
-            decision |= 8
+        # To make sure explicitly calling mandatory fields only if they exist
+        if decision & 4 != 4:
+            # Quarantine check - highest priority, we can exit as soon as this condition is met - break
+            country_fr = data[i]['from']['country']
+            country_via = ''
+            if 'via' in data[i]:
+                country_via = data[i]['via']['country']
 
-        # Secondary
-        if data[i]['passport'].lower() in sec_passport:
-            decision |= 2
+            if country_fr in med_adv_req or country_via in med_adv_req:
+                decision |= 8
 
-        if data[i]['first_name'].lower() in sec_name:
-            if data[i]['last_name'].lower() in sec_name[data[i]['first_name'].lower()]:
+            # Secondary
+            if data[i]['passport'].lower() in sec_passport:
                 decision |= 2
 
-        #  Accept
-        if data[i]['entry_reason'] == "returning":
-            if data[i]['home']['country'] == "KAN":
-                decision |= 1
+            # if passport not have valid format -- Not in assignment handout
+            if not valid_passport_format(data[i]['passport'].lower()):
+                decision |= 4
 
+            if data[i]['first_name'].lower() in sec_name:
+                if data[i]['last_name'].lower() in sec_name[data[i]['first_name'].lower()]:
+                    decision |= 2
 
-        if data[i]['entry_reason'].lower() == 'visit' and c_data[data[i]['from']['country']]['visitor_visa_required'] == "1" :
-            if 'visa' in data[i] and valid_date_format(data[i]['visa']['date']):
-                now = datetime.datetime.now()
-                visa_time = data[i]['visa']['date']
-                match = re.search(r'([0-9]*)\-', visa_time)
-                year = 0
-                if match:
-                    year = int(match.group(1))
-
-                if now.year - year < 2:
+            #  Accept
+            if data[i]['entry_reason'] == "returning":
+                if data[i]['home']['country'] == "KAN":
                     decision |= 1
+
+
+            if data[i]['entry_reason'].lower() == 'visit' and c_data[data[i]['from']['country']]['visitor_visa_required'] == "1" :
+                if 'visa' in data[i] and valid_date_format(data[i]['visa']['date']):
+                    now = datetime.datetime.now()
+                    visa_time = data[i]['visa']['date']
+                    match = re.search(r'([0-9]*)\-', visa_time)
+                    year = 0
+                    if match:
+                        year = int(match.group(1))
+
+                    if now.year - year < 2:
+                        decision |= 1
+                    else:
+                        decision |= 4
                 else:
+                    # if it is not a valid date or no visa
                     decision |= 4
 
-        if data[i]['entry_reason'].lower() == 'transit' and c_data[data[i]['from']['country']]['transit_visa_required'] == "1" :
-            if 'visa' in data[i] and valid_date_format(data[i]['visa']['date']):
-                now = datetime.datetime.now()
-                visa_time = data[i]['visa']['date']
-                match = re.search(r'([0-9]*)\-', visa_time)
-                year = 0
-                if match:
-                    year = int(match.group(1))
+            if data[i]['entry_reason'].lower() == 'transit' and c_data[data[i]['from']['country']]['transit_visa_required'] == "1" :
+                if 'visa' in data[i] and valid_date_format(data[i]['visa']['date']):
+                    now = datetime.datetime.now()
+                    visa_time = data[i]['visa']['date']
+                    match = re.search(r'([0-9]*)\-', visa_time)
+                    year = 0
+                    if match:
+                        year = int(match.group(1))
 
-                if now.year - year < 2:
-                    decision |= 1
+                    if now.year - year < 2:
+                        decision |= 1
+                    else:
+                        decision |= 4
                 else:
+                    # if it is not a valid date or no visa
                     decision |= 4
 
         if decision & 8 == 8:
@@ -195,7 +210,7 @@ def decide(input_file, watchlist_file, countries_file):
                     if decision & 1 == 1:
                         dec_list.append('Accept')
                     else:
-                        dec_list.append('No decision')
+                        dec_list.append('Accept') # I think this should be accept?
 
     return dec_list
 
@@ -226,4 +241,4 @@ def valid_date_format(date_string):
     except ValueError:
         return False
 
-decide("watchlist.json", "watchlist.json", "countries.json")
+print(decide("example_entries.json", "watchlist.json", "countries.json"))
