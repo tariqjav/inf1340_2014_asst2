@@ -20,6 +20,34 @@ def decide(input_file, watchlist_file, countries_file):
     :return: List of strings. Possible values of strings are: "Accept", "Reject", "Secondary", and "Quarantine"
     """
 
+
+    # Check for input data type: TYPE ERROR if wrong values passed
+    if not type(input_file) is str:
+        raise TypeError("Type Error: Pass in file name")
+
+    if not type(watchlist_file) is str:
+        raise TypeError("Type Error: Pass in file name")
+
+    if not type(countries_file) is str:
+        raise TypeError("Type Error: Pass in file name")
+
+
+    # Check for data files are of json types: TYPE ERROR if wrong values passed
+    match = re.search(r'([^.]*.json)', input_file)
+    if not match:
+        raise TypeError("Type Error: Pass in a json file name")
+
+    match = re.search(r'([^.]*.json)', watchlist_file)
+    if not match:
+        raise TypeError("Type Error: Pass in a json file name")
+
+    match = re.search(r'([^.]*.json)', countries_file)
+    if not match:
+        raise TypeError("Type Error: Pass in a json file name")
+
+
+    # Python will raise IO ERROR if file not found --> Expected
+
     # Reading entries
     json_data=open(input_file)
     data = json.load(json_data)
@@ -171,4 +199,4 @@ def valid_date_format(date_string):
     except ValueError:
         return False
 
-
+decide("watchlist.json", "watchlist.json", "countries.json")
