@@ -53,6 +53,15 @@ def decide(input_file, watchlist_file, countries_file):
     data = json.load(json_data)
     json_data.close()
 
+    # Check the data structure in the json for input_file -- Has to be list of dicts
+
+    if type(data) is list:
+        for i in range(len(data)):
+            if not type(data[i]) is dict:
+                raise ValueError("Value Error: input_file type is wrong")
+    else:
+        raise ValueError("Value Error: input_file type is wrong")
+
     mandatory_fields = ['first_name', 'last_name', 'home', 'birth_date', 'passport', 'from', 'entry_reason']
     loc = ['home', 'from', 'via']
     loc_fl = ['city', 'country', 'region']
@@ -63,10 +72,28 @@ def decide(input_file, watchlist_file, countries_file):
     w_data = json.load(json_data)
     json_data.close()
 
+    # Check the data structure in the json for watchlist_file  -- Has to be list of dicts
+
+    if type(w_data) is list:
+        for i in range(len(w_data)):
+            if not type(w_data[i]) is dict:
+                raise ValueError("Value Error: watchlist_file type is wrong")
+    else:
+        raise ValueError("Value Error: watchlist_file type is wrong")
+
     # Reading Country Data
     json_data=open(countries_file)
     c_data = json.load(json_data)
     json_data.close()
+
+    # Check the data structure in the json for countries_file  -- Has to be dict of dicts
+    if type(c_data) is dict:
+        for key in c_data:
+            if not type(c_data[key]) is dict:
+                raise ValueError("Value Error: countries_file file type is wrong")
+    else:
+        raise ValueError("Value Error: countries_file file type is wrong")
+
 
     # List of countries requiring medical advisory
     med_adv_req = []
