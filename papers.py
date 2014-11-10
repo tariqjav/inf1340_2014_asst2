@@ -20,7 +20,6 @@ def decide(input_file, watchlist_file, countries_file):
     :return: List of strings. Possible values of strings are: "Accept", "Reject", "Secondary", and "Quarantine"
     """
 
-
     # Check for input data type: TYPE ERROR if wrong values passed
     if not type(input_file) is str:
         raise TypeError("Type Error: Pass in file name")
@@ -31,6 +30,8 @@ def decide(input_file, watchlist_file, countries_file):
     if not type(countries_file) is str:
         raise TypeError("Type Error: Pass in file name")
 
+    if input_file == "" or watchlist_file == "" or countries_file == "":
+        raise IOError("IOError: No File name passed")
 
     # Check for data files are of json types: TYPE ERROR if wrong values passed
     match = re.search(r'([^.]*.json)', input_file)
@@ -54,7 +55,6 @@ def decide(input_file, watchlist_file, countries_file):
     json_data.close()
 
     # Check the data structure in the json for input_file -- Has to be list of dicts
-
     if type(data) is list:
         for i in range(len(data)):
             if not type(data[i]) is dict:
@@ -241,4 +241,3 @@ def valid_date_format(date_string):
     except ValueError:
         return False
 
-print(decide("example_entries.json", "watchlist.json", "countries.json"))

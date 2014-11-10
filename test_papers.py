@@ -2,39 +2,61 @@
 
 """ Module to test papers.py  """
 
-__author__ = 'Susan Sim'
-__email__ = "ses@drsusansim.org"
-
-__copyright__ = "2014 Susan Sim"
-__license__ = "MIT License"
-
-__status__ = "Prototype"
-
 # imports one per line
-import papers
+import pytest
 from papers import decide
 
 
 def test_basic():
     assert decide("test_returning_citizen.json", "watchlist.json", "countries.json") == ["Accept", "Accept"]
-    assert decide("test_returning_citizen.json", "watchlist.json", "countries.json") == ["Reject"]
-    assert decide("test_returning_citizen.json", "watchlist.json", "countries.json") == ["Secondary"]
-    assert decide("test_watchlist.json", "watchlist.json", "countries.json") == ["Accept"]
     assert decide("test_watchlist.json", "watchlist.json", "countries.json") == ["Secondary"]
-    assert decide("test_watchlist.json", "watchlist.json", "countries.json") == ["Reject"]
     assert decide("test_quarantine.json", "watchlist.json", "countries.json") == ["Quarantine"]
 
-
 def test_files():
-    with papers.raises(FileNotFoundError):
+    with pytest.raises(IOError):
         decide("test_returning_citizen.json", "", "countries.json")
+    with pytest.raises(IOError):
         decide("", "watchlist.json", "countries.json")
+    with pytest.raises(IOError):
         decide("test_returning_citizen.json", "watchlist.json", "")
+    with pytest.raises(IOError):
         decide("test_watchlist", "watchlist.json", "")
+    with pytest.raises(IOError):
         decide("", "watchlist.json", "countries.json")
-        decide("test_watchlist", "", "countries.json")
-        decide("test_quarantine", "", "countries.json")
+    with pytest.raises(IOError):
+        decide("test_watchlist.json", "", "countries.json")
+    with pytest.raises(IOError):
+        decide("test_quarantine.json", "", "countries.json")
+    with pytest.raises(IOError):
         decide("test_quarantine", "watchlist.json", "")
+    with pytest.raises(IOError):
         decide("", "watchlist.json", "countries.json")
+
+    # When file not passed are not string
+    with pytest.raises(TypeError):
+        decide(1, "watchlist.json", "countries.json")
+
+    with pytest.raises(TypeError):
+        decide("test_returning_citizen.json", 1, "countries.json")
+
+    # When file not passed are not json
+    with pytest.raises(TypeError):
+        decide("a", "watchlist.json", "countries.json")
+
+    with pytest.raises(TypeError):
+        decide("test_returning_citizen.json", "a", "countries.json")
+
+    # Wrong data structure in json passed
+    with pytest.raises(ValueError):
+        decide("countries.json", "watchlist.json", "countries.json")
+
+    with pytest.raises(ValueError):
+        decide("test_returning_citizen.json", "countries.json", "countries.json")
+
+    with pytest.raises(ValueError):
+        decide("test_returning_citizen.json", "watchlist.json", "watchlist.json")
+
 
 # add functions for other tests
+test_basic()
+test_files()
