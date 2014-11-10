@@ -8,7 +8,6 @@ import re
 import datetime
 import json
 from pprint import pprint
-#from twisted.protocols.ftp import FileNotFoundError
 from twisted.protocols.ftp import FileNotFoundError
 
 
