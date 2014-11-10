@@ -17,6 +17,8 @@ def test_basic():
     assert decide("test_2.json", "watchlist.json", "countries.json") == ["Reject"]
     # Needs medical advisory
     assert decide("test_3.json", "watchlist.json", "countries.json") == ["Quarantine"]
+    # On the watchlist
+    assert decide("test_6.json", "watchlist.json", "countries.json") == ["Secondary"]
 
 def test_files():
     with pytest.raises(FileNotFoundError):
@@ -62,7 +64,7 @@ def test_files():
     with pytest.raises(ValueError):
         decide("test_returning_citizen.json", "watchlist.json", "watchlist.json")
 
+    with pytest.raises(ValueError):
+        decide("test_5.json", "watchlist.json", "countries.json")
 
-# add functions for other tests
-test_basic()
-test_files()
+
