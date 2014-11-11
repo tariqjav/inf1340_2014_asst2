@@ -9,6 +9,7 @@ import datetime
 import json
 from pprint import pprint
 
+
 def decide(input_file, watchlist_file, countries_file):
     """
     Decides whether a traveller's entry into Kanadia should be accepted
@@ -172,7 +173,6 @@ def decide(input_file, watchlist_file, countries_file):
 
 
         # This will perform a check for individuals who should be in Quarantine- highest priority
-
         if 'from' in data[i]:
             country_fr = data[i]['from']['country']
             country_via = ''
@@ -213,8 +213,10 @@ def decide(input_file, watchlist_file, countries_file):
                         year = int(match.group(1))
 
                     if now.year - year < 2:
+                        # Accept if visa is within 2 yrs
                         decision |= 1
                     else:
+                        # Reject otherwise
                         decision |= 4
                 else:
                     # if it is not a valid date or no visa
@@ -230,7 +232,7 @@ def decide(input_file, watchlist_file, countries_file):
                         year = int(match.group(1))
 
                     if now.year - year < 2:
-                        # Accept if visa is within yrs
+                        # Accept if visa is within 2 yrs
                         decision |= 1
                     else:
                         # Reject otherwise
@@ -286,5 +288,3 @@ def valid_date_format(date_string):
     except ValueError:
         return False
 
-
-decide("example_entries.json", "watchlist.json", "countries.json")
