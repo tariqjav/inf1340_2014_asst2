@@ -67,3 +67,4 @@ def test_files():
 
     with pytest.raises(ValueError):
         decide("test_5.json", "watchlist.json", "countries.json")
+
